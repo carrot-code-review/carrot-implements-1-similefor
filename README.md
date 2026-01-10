@@ -22,11 +22,21 @@
 
 ## 3. 기능 요구사항
 
+### 이벤트
+
 - 골든 티켓은 이벤트별로 **한정 수량**이 존재합니다.
+- 이벤트는 **시작 시간**과 **종료 시간**이 있습니다.
+- 이벤트 기간 외에는 티켓을 발급받을 수 없습니다.
+- 이벤트별로 **일일 발급 한도**를 설정할 수 있습니다.
+
+### 티켓 발급
+
 - 사용자는 **선착순**으로 티켓을 발급받을 수 있습니다.
 - 사용자당 하나의 이벤트에서 **1장만** 발급받을 수 있습니다.
 - 이미 티켓을 발급받은 사용자가 다시 요청하면 **기존 티켓 정보를 반환**합니다.
-- 수량이 모두 소진된 경우 발급에 실패합니다.
+- 총 수량이 모두 소진된 경우 발급에 실패합니다.
+- 일일 발급 한도에 도달한 경우 발급에 실패합니다.
+- 일일 발급 한도는 **자정(00:00:00)**에 초기화됩니다.
 
 ---
 
@@ -34,12 +44,12 @@
 
 ### 필수 API
 
-| API                              | 설명               |
-| -------------------------------- | ------------------ |
-| `POST /events`                   | 이벤트 생성        |
-| `GET /events/:eventKey`          | 이벤트 현황 조회   |
-| `POST /events/:eventKey/tickets` | 티켓 발급 요청     |
-| `GET /users/:userId/tickets`     | 내 티켓 목록 조회  |
+| API                              | 설명              |
+| -------------------------------- | ----------------- |
+| `POST /events`                   | 이벤트 생성       |
+| `GET /events/:eventKey`          | 이벤트 현황 조회  |
+| `POST /events/:eventKey/tickets` | 티켓 발급 요청    |
+| `GET /users/:userId/tickets`     | 내 티켓 목록 조회 |
 
 ---
 
@@ -53,7 +63,10 @@
 {
   "eventKey": "golden-2026-summer",
   "name": "2026 여름 골든티켓",
-  "totalQuantity": 100
+  "totalQuantity": 100,
+  "dailyLimit": 10,
+  "startAt": "2026-01-15T00:00:00Z",
+  "endAt": "2026-01-20T23:59:59Z"
 }
 ```
 
@@ -64,7 +77,10 @@
   "eventKey": "golden-2026-summer",
   "name": "2026 여름 골든티켓",
   "totalQuantity": 100,
+  "dailyLimit": 10,
   "remainingQuantity": 100,
+  "startAt": "2026-01-15T00:00:00Z",
+  "endAt": "2026-01-20T23:59:59Z",
   "createdAt": "2026-01-10T09:00:00Z"
 }
 ```
@@ -91,7 +107,11 @@
   "eventKey": "golden-2026-summer",
   "name": "2026 여름 골든티켓",
   "totalQuantity": 100,
+  "dailyLimit": 10,
   "remainingQuantity": 23,
+  "todayIssuedCount": 7,
+  "startAt": "2026-01-15T00:00:00Z",
+  "endAt": "2026-01-20T23:59:59Z",
   "isActive": true
 }
 ```
@@ -126,7 +146,7 @@
   "ticketId": "abc-123",
   "userId": 1,
   "eventKey": "golden-2026-summer",
-  "issuedAt": "2026-01-10T10:00:00Z"
+  "issuedAt": "2026-01-15T10:00:00Z"
 }
 ```
 
@@ -137,7 +157,7 @@
   "ticketId": "abc-123",
   "userId": 1,
   "eventKey": "golden-2026-summer",
-  "issuedAt": "2026-01-10T10:00:00Z"
+  "issuedAt": "2026-01-15T10:00:00Z"
 }
 ```
 
@@ -150,12 +170,30 @@
 }
 ```
 
-**Response `409 Conflict`** - 수량 소진
+**Response `400 Bad Request`** - 이벤트 기간 아님
+
+```json
+{
+  "statusCode": 400,
+  "message": "이벤트 기간이 아닙니다."
+}
+```
+
+**Response `409 Conflict`** - 총 수량 소진
 
 ```json
 {
   "statusCode": 409,
   "message": "티켓이 모두 소진되었습니다."
+}
+```
+
+**Response `409 Conflict`** - 일일 한도 초과
+
+```json
+{
+  "statusCode": 409,
+  "message": "오늘의 발급 한도에 도달했습니다. 내일 다시 시도해주세요."
 }
 ```
 
@@ -173,7 +211,7 @@
     "ticketId": "abc-123",
     "eventKey": "golden-2026-summer",
     "eventName": "2026 여름 골든티켓",
-    "issuedAt": "2026-01-10T10:00:00Z"
+    "issuedAt": "2026-01-15T10:00:00Z"
   }
 ]
 ```
@@ -192,7 +230,7 @@
 ## 5. 기술 요구사항
 
 - Typescript, NestJS 사용
-- 데이터베이스 사용 필수 (종류 자유)
+- PostgreSQL 사용 (Docker로 제공)
 - REST API 형태로 구현
 - 제공된 Docker 환경에서 실행 가능하도록 구성
 
@@ -235,14 +273,23 @@ docker compose down
 ### 제출물
 
 - 전체 소스 코드
-- README (실행 방법, 기술 스택, 설계 의도)
+- 아래 설계 의도 작성
+
+---
+
+## 설계 의도
+
+> **Q. 설계 시 고려했던 점을 자유롭게 작성해주세요.**
+
+```
+여기에 작성해주세요.
+```
 
 ---
 
 ## 8. 참고 사항
 
-- 사용자 인증은 구현하지 않습니다.
-- 존재하지 않는 userId로 요청 시 자동으로 사용자가 생성됩니다.
+- 서비스 기준 시간은 **KST (UTC+9)**입니다.
 - 과제 내용은 외부에 공개하지 말아 주세요.
 
 감사합니다.
