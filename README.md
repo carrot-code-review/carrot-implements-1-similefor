@@ -238,6 +238,12 @@
 
 ## 6. 실행 방법
 
+### 사전 준비
+
+- [Node.js](https://nodejs.org/) v20 이상
+- [Yarn](https://yarnpkg.com/)
+- [Docker](https://www.docker.com/) (권장)
+
 ### Docker (권장)
 
 ```bash
