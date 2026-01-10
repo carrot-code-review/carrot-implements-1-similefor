@@ -238,7 +238,7 @@
 
 ## 6. 실행 방법
 
-Docker 환경이 제공됩니다. 아래 명령어로 실행할 수 있습니다.
+### Docker (권장)
 
 ```bash
 # 컨테이너 실행 (PostgreSQL + App)
@@ -249,6 +249,22 @@ docker compose up -d
 
 # 종료
 docker compose down
+```
+
+### 로컬 실행
+
+```bash
+# 의존성 설치
+yarn install
+
+# 개발 서버 실행
+yarn start:dev
+
+# 빌드
+yarn build
+
+# 프로덕션 실행
+yarn start:prod
 ```
 
 서버가 실행되면 `http://localhost:3000`에서 API를 테스트할 수 있습니다.
